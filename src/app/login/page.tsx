@@ -6,11 +6,47 @@ import Link from "next/link";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
+const SIDE_PANEL = (
+  <div
+    className="hidden lg:flex w-[420px] shrink-0 flex-col items-center justify-center relative overflow-hidden"
+    style={{ background: "linear-gradient(160deg, #1E0F06 0%, #3D2312 50%, #5C3A20 100%)" }}
+  >
+    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
+    <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-amber-700/40 to-transparent" />
+    <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
+      <span className="font-display text-[280px] text-white/[0.04] leading-none">ॐ</span>
+    </div>
+    <div className="relative z-10 text-center px-12">
+      <Link href="/" className="inline-block mb-8">
+        <span className="font-display text-3xl font-bold text-[#C17D3C]">Ved Vyas</span>
+      </Link>
+      <p className="font-display italic text-white/70 text-lg leading-relaxed mb-6">
+        &ldquo;Yoga is the journey of the self,<br />through the self,<br />to the self.&rdquo;
+      </p>
+      <p className="text-[11px] uppercase tracking-widest text-amber-500/70 font-semibold">
+        — Bhagavad Gita, 6.20
+      </p>
+      <div className="mt-12 flex flex-col gap-3 text-left">
+        {[
+          { icon: "📖", text: "Track reading across 5 sacred texts" },
+          { icon: "🔥", text: "Maintain your daily study streak" },
+          { icon: "✨", text: "AI-powered cross-scripture search" },
+          { icon: "🏛", text: "Scholarly commentaries & annotations" },
+        ].map(({ icon, text }) => (
+          <div key={text} className="flex items-center gap-3">
+            <span className="text-base">{icon}</span>
+            <span className="text-sm text-white/55">{text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,94 +57,48 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (!name.trim()) return setError("Please enter your name.");
-    if (!email.includes("@")) return setError("Please enter a valid email.");
+    if (!email.includes("@")) return setError("Please enter a valid email address.");
     if (password.length < 6) return setError("Password must be at least 6 characters.");
 
     setLoading(true);
-    // Simulate a brief async login
-    await new Promise((r) => setTimeout(r, 700));
-    login(name.trim(), email.trim().toLowerCase());
+    await new Promise((r) => setTimeout(r, 600));
+
+    // Retrieve stored account (registered via /register)
+    const stored = localStorage.getItem("vedvyas_account");
+    if (!stored) {
+      setLoading(false);
+      return setError("No account found. Please register first.");
+    }
+    const account = JSON.parse(stored) as { name: string; email: string; password: string };
+    if (account.email !== email.trim().toLowerCase()) {
+      setLoading(false);
+      return setError("Email or password is incorrect.");
+    }
+    if (account.password !== password) {
+      setLoading(false);
+      return setError("Email or password is incorrect.");
+    }
+
+    login(account.name, account.email);
     router.push("/");
   };
 
   return (
     <div className="min-h-screen bg-[#FDF6EC] flex">
-      {/* Left decorative panel */}
-      <div
-        className="hidden lg:flex w-[420px] shrink-0 flex-col items-center justify-center relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #1E0F06 0%, #3D2312 50%, #5C3A20 100%)" }}
-      >
-        {/* Top border glow */}
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
-        {/* Right border glow */}
-        <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-amber-700/40 to-transparent" />
-        {/* Om watermark */}
-        <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
-          <span className="font-display text-[280px] text-white/[0.04] leading-none">ॐ</span>
-        </div>
+      {SIDE_PANEL}
 
-        <div className="relative z-10 text-center px-12">
-          <Link href="/" className="inline-block mb-8">
-            <span className="font-display text-3xl font-bold text-[#C17D3C]">Ved Vyas</span>
-          </Link>
-          <p className="font-display italic text-white/70 text-lg leading-relaxed mb-6">
-            &ldquo;Yoga is the journey of the self,<br />through the self,<br />to the self.&rdquo;
-          </p>
-          <p className="text-[11px] uppercase tracking-widest text-amber-500/70 font-semibold">
-            — Bhagavad Gita, 6.20
-          </p>
-
-          <div className="mt-12 flex flex-col gap-3 text-left">
-            {[
-              { icon: "📖", text: "Track reading across 5 sacred texts" },
-              { icon: "🔥", text: "Maintain your daily study streak" },
-              { icon: "✨", text: "AI-powered cross-scripture search" },
-              { icon: "🏛", text: "Scholarly commentaries & annotations" },
-            ].map(({ icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
-                <span className="text-base">{icon}</span>
-                <span className="text-sm text-white/55">{text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Right: form */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        {/* Mobile logo */}
         <Link href="/" className="mb-8 lg:hidden">
           <span className="font-display text-2xl font-bold text-[#C17D3C]">Ved Vyas</span>
         </Link>
 
         <div className="w-full max-w-sm">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="font-display text-3xl font-bold text-[#3B2415]">Welcome back</h1>
-            <p className="text-[#8B6344] text-sm mt-1.5">
-              Sign in to continue your spiritual journey.
-            </p>
+            <p className="text-[#8B6344] text-sm mt-1.5">Sign in to continue your spiritual journey.</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-            {/* Name */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="name" className="text-xs font-semibold text-[#5C3A20] uppercase tracking-wider">
-                Full Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Arjuna"
-                autoComplete="name"
-                className="w-full bg-white border border-[#E8D5B8] rounded-xl px-4 py-3 text-sm text-[#3B2415] placeholder:text-[#C4A882] focus:outline-none focus:border-[#C17D3C] focus:ring-2 focus:ring-[#C17D3C]/15 transition-all"
-              />
-            </div>
-
             {/* Email */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-xs font-semibold text-[#5C3A20] uppercase tracking-wider">
@@ -131,10 +121,7 @@ export default function LoginPage() {
                 <label htmlFor="password" className="text-xs font-semibold text-[#5C3A20] uppercase tracking-wider">
                   Password
                 </label>
-                <button
-                  type="button"
-                  className="text-xs text-[#C17D3C] hover:text-[#9B6020] font-medium transition-colors"
-                >
+                <button type="button" className="text-xs text-[#C17D3C] hover:text-[#9B6020] font-medium transition-colors">
                   Forgot password?
                 </button>
               </div>
@@ -159,14 +146,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
                 {error}
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -181,14 +166,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-[#E8D5B8]" />
             <span className="text-[#B8906A] text-xs">or</span>
             <div className="flex-1 h-px bg-[#E8D5B8]" />
           </div>
 
-          {/* Guest link */}
           <Link
             href="/"
             className="block w-full text-center bg-white border border-[#E8D5B8] hover:border-[#C17D3C] hover:bg-[#FDF6EC] text-[#5C3A20] font-semibold py-3 rounded-xl text-sm transition-all"
@@ -198,7 +181,7 @@ export default function LoginPage() {
 
           <p className="text-center text-xs text-[#B8906A] mt-6">
             New seeker?{" "}
-            <Link href="/login" className="text-[#C17D3C] hover:text-[#9B6020] font-semibold transition-colors">
+            <Link href="/register" className="text-[#C17D3C] hover:text-[#9B6020] font-semibold transition-colors">
               Create an account
             </Link>
           </p>
@@ -207,3 +190,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
