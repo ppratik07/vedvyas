@@ -16,8 +16,8 @@ export default async function ExplorerPage() {
       <Navbar />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+          <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
             <DailyContemplation verse={dailyVerse} chapterRef={chapterRef} />
             <StudyLibrary />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

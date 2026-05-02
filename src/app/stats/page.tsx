@@ -12,12 +12,13 @@ export default function StatsPage() {
       <Navbar />
       <div className="flex flex-1">
         <Sidebar title="Digital Sanctuary" subtitle="Welcome, Seeker" />
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+          <div className="max-w-5xl mx-auto w-full flex flex-col gap-6">
             {/* Header */}
-            <div>
+            <div className="border-b border-[#E8D5B8] pb-5">
+              <p className="text-xs uppercase tracking-widest text-[#B8906A] font-semibold mb-1">Overview</p>
               <h1 className="font-display text-3xl font-bold text-[#3B2415]">Sanctuary Overview</h1>
-              <p className="text-sm text-[#8B6344] italic mt-1">Your path of contemplation and growth.</p>
+              <p className="text-sm text-[#8B6344] mt-1">Your path of contemplation and growth.</p>
             </div>
 
             <StatsOverview />
