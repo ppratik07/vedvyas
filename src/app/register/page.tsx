@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, UserPlus, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { resetProgress } from "@/lib/store/userProgress";
 
 const PASSWORD_RULES = [
   { label: "At least 6 characters", test: (p: string) => p.length >= 6 },
@@ -42,6 +43,7 @@ export default function RegisterPage() {
     localStorage.setItem("vedvyas_account", JSON.stringify(account));
 
     login(account.name, account.email);
+    resetProgress();
     router.push("/");
   };
 

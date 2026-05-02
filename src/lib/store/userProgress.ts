@@ -67,17 +67,41 @@ const DEFAULT_PROGRESS: UserProgress = {
   readingPathIndex: 2,
 };
 
+export const FRESH_PROGRESS: UserProgress = {
+  _v: 1,
+  versesRead: 0,
+  streakDays: 0,
+  lastReadDate: "",
+  streakHistory: [],
+  milestones: 0,
+  bookmarks: [],
+  journal: [],
+  scriptureProgress: {},
+  currentReadingPath: "bhagavad-gita",
+  readingPathIndex: 0,
+};
+
+export function resetProgress(): void {
+  saveProgress(FRESH_PROGRESS);
+}
+
 export function getProgress(): UserProgress {
-  if (typeof window === "undefined") return DEFAULT_PROGRESS;
+  if (typeof window === "undefined") return FRESH_PROGRESS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PROGRESS));
-      return DEFAULT_PROGRESS;
+      saveProgress(FRESH_PROGRESS);
+      return FRESH_PROGRESS;
     }
-    return JSON.parse(raw) as UserProgress;
+    const parsed = JSON.parse(raw) as UserProgress;
+    // No _v means old demo-seeded data — auto-reset to fresh
+    if (!parsed._v) {
+      saveProgress(FRESH_PROGRESS);
+      return { ...FRESH_PROGRESS };
+    }
+    return parsed;
   } catch {
-    return DEFAULT_PROGRESS;
+    return FRESH_PROGRESS;
   }
 }
 

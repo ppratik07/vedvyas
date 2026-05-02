@@ -78,6 +78,7 @@ export interface JournalEntry {
 }
 
 export interface UserProgress {
+  _v?: number;             // schema version — absent on old demo-seeded data
   versesRead: number;
   streakDays: number;
   lastReadDate: string | null;
