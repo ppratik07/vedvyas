@@ -1,5 +1,3 @@
-import { useRouter } from "next/navigation";
-
 interface RelatedConceptsProps {
   concepts: string[];
   visualStudyTitle: string;
