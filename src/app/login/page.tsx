@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { loadProgressFromDb } from "@/lib/store/userProgress";
 
 const SIDE_PANEL = (
   <div
@@ -61,26 +62,24 @@ export default function LoginPage() {
     if (password.length < 6) return setError("Password must be at least 6 characters.");
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-
-    // Retrieve stored account (registered via /register)
-    const stored = localStorage.getItem("vedvyas_account");
-    if (!stored) {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const data = await res.json() as { id?: string; name?: string; email?: string; avatarInitial?: string; error?: string };
+      if (!res.ok) {
+        setLoading(false);
+        return setError(data.error ?? "Sign in failed. Please try again.");
+      }
+      await loadProgressFromDb(data.id!);
+      login(data.name!, data.email!, data.id!);
+      router.push("/");
+    } catch {
       setLoading(false);
-      return setError("No account found. Please register first.");
+      setError("Network error. Please check your connection.");
     }
-    const account = JSON.parse(stored) as { name: string; email: string; password: string };
-    if (account.email !== email.trim().toLowerCase()) {
-      setLoading(false);
-      return setError("Email or password is incorrect.");
-    }
-    if (account.password !== password) {
-      setLoading(false);
-      return setError("Email or password is incorrect.");
-    }
-
-    login(account.name, account.email);
-    router.push("/");
   };
 
   return (

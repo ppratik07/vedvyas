@@ -1,71 +1,9 @@
 "use client";
 
 import type { UserProgress, Bookmark, JournalEntry } from "@/lib/types";
+import { getAuthUser } from "@/lib/store/auth";
 
 const STORAGE_KEY = "vedvyas_progress";
-
-const DEFAULT_PROGRESS: UserProgress = {
-  versesRead: 1402,
-  streakDays: 14,
-  lastReadDate: new Date().toISOString().split("T")[0],
-  streakHistory: Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().split("T")[0];
-  }),
-  milestones: 8,
-  bookmarks: [
-    {
-      id: "bm1",
-      title: "The Hymn of Creation (Nasadiya Sukta)",
-      reference: "Rigveda 10.129",
-      preview: "\"Then was not non-existent nor existent...\"",
-      tags: ["COSMOLOGY", "PHILOSOPHY"],
-      savedAt: new Date().toISOString(),
-    },
-    {
-      id: "bm2",
-      title: "The Prayer for Peace",
-      reference: "Sama Veda",
-      preview: "\"May there be peace in the sky...\"",
-      tags: ["DAILY PRAYER"],
-      savedAt: new Date().toISOString(),
-    },
-    {
-      id: "bm3",
-      title: "On Right Action",
-      reference: "Samaveda 3.11",
-      preview: "\"O Agni, lead us on the path of prosperity...\"",
-      tags: ["DHARMA"],
-      savedAt: new Date().toISOString(),
-    },
-  ],
-  journal: [
-    {
-      id: "j1",
-      reference: "YAJURVEDA 2.15",
-      quote: "\"The nature of truth is like a golden vessel, covering the entrance to the Absolute.\"",
-      note: "This metaphor of the 'golden vessel' seems to imply that even beauty can be a distraction from ultimate reality.",
-      createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    },
-    {
-      id: "j2",
-      reference: "RIGVEDA 1.164",
-      quote: "\"They call him Indra, Mitra, Varuna, Agni, and he is heavenly nobly-winged Garutman.\"",
-      note: "Reflection on the oneness of divinity despite the many names used in the hymns.",
-      createdAt: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
-    },
-  ],
-  scriptureProgress: {
-    "bhagavad-gita": 45,
-    "ramayana": 12,
-    "mahabharata": 62,
-    "rig-veda": 5,
-    "upanishads": 28,
-  },
-  currentReadingPath: "yajurveda",
-  readingPathIndex: 2,
-};
 
 export const FRESH_PROGRESS: UserProgress = {
   _v: 1,
@@ -90,13 +28,13 @@ export function getProgress(): UserProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      saveProgress(FRESH_PROGRESS);
-      return FRESH_PROGRESS;
+      saveProgressLocal(FRESH_PROGRESS);
+      return { ...FRESH_PROGRESS };
     }
     const parsed = JSON.parse(raw) as UserProgress;
-    // No _v means old demo-seeded data — auto-reset to fresh
     if (!parsed._v) {
-      saveProgress(FRESH_PROGRESS);
+      // Old demo-seeded data — wipe it
+      saveProgressLocal(FRESH_PROGRESS);
       return { ...FRESH_PROGRESS };
     }
     return parsed;
@@ -105,9 +43,40 @@ export function getProgress(): UserProgress {
   }
 }
 
-export function saveProgress(progress: UserProgress): void {
+/** Write to localStorage only (no DB sync). Use internally to avoid loops. */
+function saveProgressLocal(progress: UserProgress): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+}
+
+/** Write to localStorage and async-sync to DB if user is logged in. */
+export function saveProgress(progress: UserProgress): void {
+  saveProgressLocal(progress);
+  const auth = getAuthUser();
+  if (auth?.accountId) {
+    fetch("/api/progress", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accountId: auth.accountId, progress }),
+    }).catch(() => {/* best-effort */});
+  }
+}
+
+/**
+ * Load progress from DB into localStorage.
+ * Called on login so the user sees their real data immediately.
+ */
+export async function loadProgressFromDb(accountId: string): Promise<void> {
+  try {
+    const res = await fetch(`/api/progress?accountId=${encodeURIComponent(accountId)}`);
+    if (!res.ok) return;
+    const data = await res.json() as { progress?: UserProgress };
+    if (data.progress) {
+      saveProgressLocal({ ...data.progress, _v: 1 });
+    }
+  } catch {
+    // Network error — fall back to localStorage
+  }
 }
 
 export function markVerseRead(scriptureId: string): void {
@@ -116,19 +85,16 @@ export function markVerseRead(scriptureId: string): void {
 
   p.versesRead += 1;
 
-  // Update streak
   if (p.lastReadDate !== today) {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yStr = yesterday.toISOString().split("T")[0];
     if (p.lastReadDate === yStr) {
       p.streakDays += 1;
-    } else if (p.lastReadDate !== today) {
+    } else {
       p.streakDays = 1;
     }
     p.lastReadDate = today;
-
-    // Keep last 7 days history
     if (!p.streakHistory.includes(today)) {
       p.streakHistory = [...p.streakHistory.slice(-6), today];
     }

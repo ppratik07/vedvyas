@@ -33,6 +33,13 @@ export default function JournalSection() {
         </Link>
       </div>
 
+      {recent.length === 0 ? (
+        <div className="px-5 py-8 flex flex-col items-center gap-2 text-center">
+          <PenLine size={22} className="text-[#D4B896]" />
+          <p className="text-sm font-medium text-[#8B6344]">No journal entries yet</p>
+          <p className="text-xs text-[#B8906A]">Reflect on verses while reading to add entries.</p>
+        </div>
+      ) : (
       <div className="flex flex-col divide-y divide-[#F5E6D0]">
         {recent.map((entry) => (
           <div key={entry.id} className="p-5 hover:bg-[#FDF6EC]/50 transition-colors">
@@ -52,6 +59,7 @@ export default function JournalSection() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

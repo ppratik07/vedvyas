@@ -12,8 +12,8 @@ export function useAuth() {
     setReady(true);
   }, []);
 
-  const login = (name: string, email: string) => {
-    const u = loginUser(name, email);
+  const login = (name: string, email: string, accountId: string) => {
+    const u = loginUser(name, email, accountId);
     setUser(u);
     return u;
   };

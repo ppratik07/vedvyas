@@ -1,7 +1,7 @@
 "use client";
 
 import { useProgress } from "@/hooks/useProgress";
-import { BookOpen, Flame, Trophy, TrendingUp } from "lucide-react";
+import { BookOpen, Flame, Trophy } from "lucide-react";
 
 export default function StatsOverview() {
   const { progress } = useProgress();
@@ -13,9 +13,8 @@ export default function StatsOverview() {
       iconBg: "bg-[#C17D3C]",
       value: progress.versesRead.toLocaleString(),
       label: "Total Verses Read",
-      delta: "+12 today",
-      deltaIcon: <TrendingUp size={10} />,
-      positive: true,
+      delta: progress.versesRead > 0 ? `${progress.versesRead} total` : "Just getting started",
+      positive: progress.versesRead > 0,
     },
     {
       icon: <Flame size={20} className="text-white" />,
@@ -23,9 +22,8 @@ export default function StatsOverview() {
       value: `${progress.streakDays}`,
       unit: "days",
       label: "Current Streak",
-      delta: "Best: 32 days",
-      deltaIcon: null,
-      positive: true,
+      delta: progress.streakDays > 0 ? `${progress.streakDays}-day streak` : "Start your streak today",
+      positive: progress.streakDays > 0,
     },
     {
       icon: <Trophy size={20} className="text-white" />,
@@ -33,9 +31,8 @@ export default function StatsOverview() {
       value: `${progress.milestones}`,
       unit: "achieved",
       label: "Milestones",
-      delta: "4/12 active",
-      deltaIcon: null,
-      positive: false,
+      delta: progress.milestones > 0 ? `${progress.milestones} unlocked` : "None yet",
+      positive: progress.milestones > 0,
     },
   ];
 
@@ -53,7 +50,6 @@ export default function StatsOverview() {
             <span className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${
               s.positive ? "bg-emerald-50 text-emerald-600" : "bg-[#FDF6EC] text-[#8B6344]"
             }`}>
-              {s.deltaIcon}
               {s.delta}
             </span>
           </div>

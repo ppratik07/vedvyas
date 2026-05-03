@@ -21,8 +21,15 @@ export default function BookmarksSection() {
         <button className="text-xs text-[#C17D3C] hover:text-[#9B6020] font-medium transition-colors">Manage</button>
       </div>
 
-      <div className="flex flex-col divide-y divide-[#F5E6D0]">
-        {bookmarks.map((bm) => (
+      {bookmarks.length === 0 ? (
+        <div className="px-5 py-8 flex flex-col items-center gap-2 text-center">
+          <BookMarked size={22} className="text-[#D4B896]" />
+          <p className="text-sm font-medium text-[#8B6344]">No bookmarks yet</p>
+          <p className="text-xs text-[#B8906A]">Save verses while reading to see them here.</p>
+        </div>
+      ) : (
+        <div className="flex flex-col divide-y divide-[#F5E6D0]">
+          {bookmarks.map((bm) => (
           <div key={bm.id} className="px-5 py-3.5 flex gap-3 hover:bg-[#FDF6EC]/50 transition-colors">
             <div className="w-7 h-7 bg-[#FDF6EC] border border-[#E8D5B8] rounded-lg flex items-center justify-center shrink-0 mt-0.5">
               <Bookmark size={12} className="text-[#C17D3C] fill-[#C17D3C]" />
@@ -44,6 +51,7 @@ export default function BookmarksSection() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

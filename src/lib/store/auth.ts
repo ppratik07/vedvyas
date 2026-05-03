@@ -6,6 +6,7 @@ export interface AuthUser {
   name: string;
   email: string;
   avatarInitial: string;
+  accountId: string;
 }
 
 export function getAuthUser(): AuthUser | null {
@@ -18,11 +19,12 @@ export function getAuthUser(): AuthUser | null {
   }
 }
 
-export function loginUser(name: string, email: string): AuthUser {
+export function loginUser(name: string, email: string, accountId: string): AuthUser {
   const user: AuthUser = {
     name,
     email,
     avatarInitial: name.trim().charAt(0).toUpperCase(),
+    accountId,
   };
   localStorage.setItem(AUTH_KEY, JSON.stringify(user));
   return user;

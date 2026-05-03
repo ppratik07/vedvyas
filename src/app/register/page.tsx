@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, UserPlus, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { resetProgress } from "@/lib/store/userProgress";
+import { loadProgressFromDb } from "@/lib/store/userProgress";
 
 const PASSWORD_RULES = [
   { label: "At least 6 characters", test: (p: string) => p.length >= 6 },
@@ -36,15 +36,24 @@ export default function RegisterPage() {
     if (password !== confirm) return setError("Passwords do not match.");
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
-
-    // Persist account to localStorage so login page can verify
-    const account = { name: name.trim(), email: email.trim().toLowerCase(), password };
-    localStorage.setItem("vedvyas_account", JSON.stringify(account));
-
-    login(account.name, account.email);
-    resetProgress();
-    router.push("/");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password }),
+      });
+      const data = await res.json() as { id?: string; name?: string; email?: string; avatarInitial?: string; error?: string };
+      if (!res.ok) {
+        setLoading(false);
+        return setError(data.error ?? "Registration failed. Please try again.");
+      }
+      login(data.name!, data.email!, data.id!);
+      await loadProgressFromDb(data.id!);
+      router.push("/");
+    } catch {
+      setLoading(false);
+      setError("Network error. Please check your connection.");
+    }
   };
 
   return (

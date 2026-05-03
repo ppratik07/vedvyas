@@ -1,9 +1,29 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { SCRIPTURES } from "@/lib/data/scriptures";
 import ScriptureCard from "./ScriptureCard";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { getProgress } from "@/lib/store/userProgress";
+import type { Scripture } from "@/lib/types";
 
 export default function StudyLibrary() {
+  const [scriptures, setScriptures] = useState<Scripture[]>(
+    SCRIPTURES.slice(0, 5).map((s) => ({ ...s, completionPercent: 0, lastReadLabel: "Not started" }))
+  );
+
+  useEffect(() => {
+    const p = getProgress();
+    setScriptures(
+      SCRIPTURES.slice(0, 5).map((s) => ({
+        ...s,
+        completionPercent: p.scriptureProgress[s.id] ?? 0,
+        lastReadLabel: p.scriptureProgress[s.id] ? s.lastReadLabel : "Not started",
+      }))
+    );
+  }, []);
+
   return (
     <section>
       <div className="flex items-end justify-between mb-4">
@@ -17,7 +37,7 @@ export default function StudyLibrary() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 gap-4">
-        {SCRIPTURES.slice(0, 5).map((s, i) => (
+        {scriptures.map((s, i) => (
           <ScriptureCard key={s.id} scripture={s} index={i} />
         ))}
 

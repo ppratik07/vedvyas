@@ -1,7 +1,22 @@
+"use client";
+
+import { useProgress } from "@/hooks/useProgress";
 import { READING_PATH } from "@/lib/data/scriptures";
 import { Check, Lock } from "lucide-react";
 
 export default function ReadingPath() {
+  const { progress } = useProgress();
+
+  // Compute statuses from real progress data
+  const steps = READING_PATH.map((step) => {
+    const pct = progress?.scriptureProgress[step.id] ?? 0;
+    if (pct >= 100) return { ...step, status: "completed" as const, progress: 100 };
+    if (pct > 0) return { ...step, status: "in-progress" as const, progress: pct };
+    return { ...step, status: "locked" as const, progress: 0 };
+  });
+
+  const firstIncompleteIdx = steps.findIndex((s) => s.status !== "completed");
+  const completedCount = firstIncompleteIdx === -1 ? steps.length : firstIncompleteIdx;
   return (
     <div className="bg-white rounded-2xl border border-[#E8D5B8] p-5 shadow-sm">
       <h3 className="font-semibold text-[#3B2415] text-sm mb-1">Reading Path: The Journey</h3>
@@ -11,11 +26,11 @@ export default function ReadingPath() {
         <div
           className="absolute top-5 left-8 h-0.5 bg-[#C17D3C]"
           style={{
-            width: `calc(${(READING_PATH.findIndex(p => p.status !== "completed") / (READING_PATH.length - 1)) * 100}% - 2rem)`,
+            width: `calc(${(completedCount / (steps.length - 1)) * 100}% - 2rem)`,
           }}
         />
 
-        {READING_PATH.map((step) => {
+        {steps.map((step) => {
           const isCompleted = step.status === "completed";
           const isInProgress = step.status === "in-progress";
           const isLocked = step.status === "locked";

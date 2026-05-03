@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Account {
+  id        String       @id @default(cuid())
+  name      String
+  email     String       @unique
+  password  String
+  createdAt DateTime     @default(now())
+  progress  UserProgress?
+}
+
+model UserProgress {
+  id                 String         @id @default(cuid())
+  accountId          String         @unique
+  account            Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  versesRead         Int            @default(0)
+  streakDays         Int            @default(0)
+  lastReadDate       String         @default("")
+  streakHistory      String[]
+  milestones         Int            @default(0)
+  scriptureProgress  Json           @default("{}")
+  currentReadingPath String         @default("bhagavad-gita")
+  readingPathIndex   Int            @default(0)
+  bookmarks          Bookmark[]
+  journal            JournalEntry[]
+  updatedAt          DateTime       @updatedAt
+}
+
+model Bookmark {
+  id         String       @id
+  progressId String
+  progress   UserProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  title      String
+  reference  String
+  preview    String
+  tags       String[]
+  savedAt    String
+}
+
+model JournalEntry {
+  id         String       @id
+  progressId String
+  progress   UserProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  reference  String
+  quote      String
+  note       String
+  createdAt  String
+}
