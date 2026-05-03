@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import type { SearchResult } from "@/lib/types";
 
 const SYSTEM_PROMPT = `You are a scholar of Hindu scriptures — the Vedas, Upanishads, Bhagavad Gita, Ramayana, and Mahabharata. When answering questions:
@@ -36,9 +37,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      // Return rich mock data when no API key is configured
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+
+    // No keys configured — return mock data
+    if (!openaiKey && !geminiKey) {
       const mock: SearchResult = {
         synthesis: `<p>In the <em>Bhagavad Gita</em>, <strong>Karma</strong> is not merely a system of cosmic retribution, but a path toward spiritual liberation (<em>Moksha</em>). Krishna emphasizes that action is inevitable for all living beings, yet the binding nature of action can be transcended through the practice of <strong>Nishkama Karma</strong> — action performed without attachment to the results.</p><p>&ldquo;You have a right to perform your prescribed duty, but you are not entitled to the fruits of actions. Never consider yourself to be the cause of the results of your activities, nor be attached to inaction.&rdquo;</p><p>The synthesis of various commentaries suggests that 'Karma' operates on three levels: <strong>Karma</strong> (right action), <em>Vikarma</em> (wrong action), and <strong>Akarma</strong> (inaction or selfless action). To achieve tranquility, one must transform everyday work into a form of sacrificial offering (<em>Yajna</em>), thereby neutralizing the karmic seeds that lead to further rebirth.</p>`,
         citations: [
@@ -52,18 +55,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(mock);
     }
 
-    const openai = new OpenAI({ apiKey });
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: `Question: ${query}` },
-      ],
-      temperature: 0.7,
-      max_tokens: 1200,
-    });
+    let raw: string;
 
-    const raw = completion.choices[0]?.message?.content ?? "{}";
+    if (openaiKey) {
+      // Use OpenAI
+      const openai = new OpenAI({ apiKey: openaiKey });
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: `Question: ${query}` },
+        ],
+        temperature: 0.7,
+        max_tokens: 1200,
+      });
+      raw = completion.choices[0]?.message?.content ?? "{}";
+    } else {
+      // Fallback to Gemini
+      const ai = new GoogleGenAI({ apiKey: geminiKey! });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: `${SYSTEM_PROMPT}\n\nQuestion: ${query}`,
+      });
+      raw = response.text ?? "{}";
+      // Strip markdown fences if Gemini wraps the JSON
+      raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    }
     let result: SearchResult;
     try {
       result = JSON.parse(raw);
