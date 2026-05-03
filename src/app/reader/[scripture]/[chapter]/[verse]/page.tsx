@@ -14,7 +14,7 @@ interface Params {
   }>;
 }
 
-const NON_GITA_SCRIPTURES = new Set(["ramayana", "mahabharata", "rig-veda", "upanishads"]);
+const NON_GITA_SCRIPTURES = new Set(["ramayana", "mahabharata", "rig-veda", "upanishads", "arthashastra", "bhagavata-purana", "atharva-veda"]);
 
 // Static fallback per scripture when AI is unavailable
 const STATIC_FALLBACKS: Record<string, GitaVerse> = {
@@ -45,6 +45,27 @@ const STATIC_FALLBACKS: Record<string, GitaVerse> = {
     transliteration: "tat tvam asi",
     prabhu: { author: "Scholarly Translation", et: "That thou art — the great mahavakya declaring the identity of the individual soul with Brahman.", ec: "One of the four great sayings of the Upanishads, from the Chandogya Upanishad." },
     sankar: { author: "Classical Commentary", et: "Thou art the Absolute Reality.", ec: "Adi Shankara's Advaita Vedanta holds this mahavakya as the highest expression of non-dual truth." },
+  },
+  "arthashastra": {
+    _id: "as-fallback", chapter: 1, verse: 1,
+    slok: "सुखस्य मूलं धर्मः। धर्मस्य मूलं अर्थः। अर्थस्य मूलं राज्यम्।",
+    transliteration: "sukhasya mūlaṃ dharmaḥ | dharmasya mūlaṃ arthaḥ | arthasya mūlaṃ rājyam",
+    prabhu: { author: "Scholarly Translation", et: "The root of happiness is dharma; the root of dharma is wealth (artha); the root of wealth is the state.", ec: "Kautilya establishes the interdependence of the four aims of life, placing statecraft at the foundation of all human flourishing." },
+    sankar: { author: "Classical Commentary", et: "Welfare springs from righteousness, righteousness from prosperity, and prosperity from sound governance.", ec: "The Arthashastra is unique among ancient texts in treating worldly governance as a prerequisite for dharmic life." },
+  },
+  "bhagavata-purana": {
+    _id: "bp-fallback", chapter: 1, verse: 1,
+    slok: "जन्माद्यस्य यतोऽन्वयादितरतश्चार्थेष्वभिज्ञः स्वराट्।",
+    transliteration: "janmādyasya yato'nvayāditarataścārtheṣvabhijñaḥ svarāṭ",
+    prabhu: { author: "Scholarly Translation", et: "He from whom the creation, sustenance, and dissolution of the universe proceed — who is directly and indirectly conscious of all — that Absolute Truth is Brahman.", ec: "The opening sutra of the Bhagavata Purana establishes the Supreme as the source and substance of all existence." },
+    sankar: { author: "Classical Commentary", et: "That from which all beings arise, in which they live, and into which they return — know that as Brahman.", ec: "This echoes the Taittiriya Upanishad, grounding the Bhagavata's devotional theology in Vedantic non-dualism." },
+  },
+  "atharva-veda": {
+    _id: "av-fallback", chapter: 1, verse: 1,
+    slok: "भद्रं कर्णेभिः शृणुयाम देवाः। भद्रं पश्येमाक्षभिर्यजत्राः।",
+    transliteration: "bhadraṃ karṇebhiḥ śṛṇuyāma devāḥ | bhadraṃ paśyemākṣabhir yajatrāḥ",
+    prabhu: { author: "Scholarly Translation", et: "O gods, may we hear with our ears what is auspicious; may we see with our eyes what is auspicious, O ye worthy of worship.", ec: "This shanti-patha (peace invocation) opens the Atharva Veda, praying for well-being of the senses and the entire being." },
+    sankar: { author: "Classical Commentary", et: "May blessed things enter through our ears; may our eyes behold the holy and the good.", ec: "The Vedic tradition regards sound and sight as the primary channels of divine grace, which this prayer seeks to purify." },
   },
 };
 

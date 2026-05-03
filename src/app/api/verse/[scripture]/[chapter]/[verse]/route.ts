@@ -8,6 +8,9 @@ const SCRIPTURE_NAMES: Record<string, string> = {
   "mahabharata": "Mahabharata",
   "rig-veda": "Rigveda",
   "upanishads": "Principal Upanishads",
+  "arthashastra": "Arthashastra of Kautilya",
+  "bhagavata-purana": "Bhagavata Purana",
+  "atharva-veda": "Atharva Veda",
 };
 
 // Map chapter numbers to specific parvas/sections so the AI generates
@@ -56,6 +59,62 @@ const UPANISHAD_TEXTS: Record<number, string> = {
   10: "Brihadaranyaka Upanishad — Yajnavalkya's dialogues on the Atman",
 };
 
+const ARTHASHASTRA_BOOKS: Record<number, string> = {
+  1: "Book 1 (Vinayaadhikarika) — Training of the prince, duties of a king, selection of ministers",
+  2: "Book 2 (Adhyakshaprachara) — Duties of government superintendents and revenue administration",
+  3: "Book 3 (Dharmasthiya) — Civil law, property, contracts, and dispute resolution",
+  4: "Book 4 (Kantakashodhana) — Suppression of criminals and protection of citizens",
+  5: "Book 5 (Yogavritta) — Conduct of courtiers, secret agents, and espionage",
+  6: "Book 6 (Mandala-yoga) — Foreign policy and the circle of kings",
+  7: "Book 7 (Shadgunya-niti) — The six measures of foreign policy (peace, war, march, halt, alliance, duplicity)",
+  8: "Book 8 (Vyasanas) — On calamities that befall the state and their remedies",
+  9: "Book 9 (Abhiyasyakarmani) — Preparations for military campaigns",
+  10: "Book 10 (Yuddhavritta) — Conduct of war and siege operations",
+  11: "Book 11 (Sangha-vritta) — Corporations and guilds",
+  12: "Book 12 (Abala-yuddhiya) — Strategy for the weaker king against a stronger enemy",
+  13: "Book 13 (Durga-labhopaya) — Methods of capturing a fort",
+  14: "Book 14 (Aupanishadika) — Secret and occult remedies for statecraft",
+  15: "Book 15 (Tantrayukti) — Scientific exposition of the Arthashastra itself",
+};
+
+const BHAGAVATA_SKANDHAS: Record<number, string> = {
+  1: "Skandha 1 — Creation of the universe; Narada's teachings; birth of Parikshit",
+  2: "Skandha 2 — The cosmic form of Vishnu; Brahma's meditation; the process of creation",
+  3: "Skandha 3 — The dialogue of Vidura and Maitreya; Kapila's Sankhya philosophy",
+  4: "Skandha 4 — The story of Dhruva and Prithu; the lineage of Manu",
+  5: "Skandha 5 — Priyavrata's story; description of the universe; Rishabha and Bharata",
+  6: "Skandha 6 — Ajamila's redemption; story of Indra and Vritra",
+  7: "Skandha 7 — The glory of Prahlada and the defeat of Hiranyakashipu by Narasimha",
+  8: "Skandha 8 — The churning of the ocean (Samudra Manthan); Gajendra's liberation; Vamana avatar",
+  9: "Skandha 9 — Solar and lunar dynasties; stories of Rama, Parashurama, and the kings",
+  10: "Skandha 10 — The life and pastimes of Lord Krishna from birth to Mathura and Vrindavana",
+  11: "Skandha 11 — Krishna's teachings to Uddhava (Uddhava Gita); departure of Krishna",
+  12: "Skandha 12 — The age of Kali; glory of the Bhagavata Purana; Parikshit's liberation",
+};
+
+const ATHARVA_KANDAS: Record<number, string> = {
+  1: "Kanda 1 — Hymns for health, healing wounds, and protection from disease",
+  2: "Kanda 2 — Charms for long life, safety in battle, and protection from evil",
+  3: "Kanda 3 — Hymns for prosperity, success in trade, and gaining cattle",
+  4: "Kanda 4 — Hymns to Rohita (the sun), cosmic creation, and cosmic order (Skambha)",
+  5: "Kanda 5 — Charms against enemies, fever, and the dangers of the forest",
+  6: "Kanda 6 — Hymns for love, harmony in the home, and removal of hatred",
+  7: "Kanda 7 — Short hymns on diverse topics — prayer, food, soma, and the gods",
+  8: "Kanda 8 — Hymns to Rohita and Skambha; the cosmic pillar supporting the universe",
+  9: "Kanda 9 — Hymns praising the mystical power of the Brahmana and sacred speech",
+  10: "Kanda 10 — The hymn of the cosmic man (Purusha) and the nature of Brahman",
+  11: "Kanda 11 — Hymns to Ucchishta (the cosmic residue) and Brahmacharya (studentship)",
+  12: "Kanda 12 — The Prithivi Sukta — the great hymn to the Earth goddess",
+  13: "Kanda 13 — Hymns to Rohita as the cosmic sun and primal light",
+  14: "Kanda 14 — Wedding hymns (Vivaha) and blessings for marriage",
+  15: "Kanda 15 — The mystery of the Vratya (wandering ascetic)",
+  16: "Kanda 16 — Expiatory hymns and rites for atonement",
+  17: "Kanda 17 — Hymns to Surya (the sun) and prayers for strength",
+  18: "Kanda 18 — Funeral hymns (Pitri-medha) — rites for the departed",
+  19: "Kanda 19 — Supplementary hymns for various rites and blessings",
+  20: "Kanda 20 — Hymns to Indra (largely shared with the Rigveda)",
+};
+
 function buildPrompt(scripture: string, chapter: number, verse: number): string {
   let contextClue = "";
 
@@ -81,6 +140,24 @@ Generate a Vedic hymn addressed to a deity appropriate for Mandala ${mandala}: M
     const upDesc = UPANISHAD_TEXTS[upNum] ?? UPANISHAD_TEXTS[1];
     contextClue = `This verse comes from the ${upDesc}.
 Generate a verse that thematically fits this Upanishad's core teaching. Use concepts appropriate to that text.`;
+  } else if (scripture === "arthashastra") {
+    const maxBook = Math.max(...Object.keys(ARTHASHASTRA_BOOKS).map(Number));
+    const bookNum = ((chapter - 1) % maxBook) + 1;
+    const bookDesc = ARTHASHASTRA_BOOKS[bookNum] ?? ARTHASHASTRA_BOOKS[1];
+    contextClue = `This passage comes from the ${bookDesc}.
+The Arthashastra is written in Sanskrit prose-verse (sutra style). Generate a crisp sutra or verse on statecraft, governance, or strategy appropriate to this book's topic. The "slok" should reflect Kautilya's precise, pragmatic style — not devotional or mythological content.`;
+  } else if (scripture === "bhagavata-purana") {
+    const maxSkandha = Math.max(...Object.keys(BHAGAVATA_SKANDHAS).map(Number));
+    const skandhaNum = ((chapter - 1) % maxSkandha) + 1;
+    const skandhaDesc = BHAGAVATA_SKANDHAS[skandhaNum] ?? BHAGAVATA_SKANDHAS[1];
+    contextClue = `This verse comes from the ${skandhaDesc}.
+Generate a devotional verse appropriate to this Skandha's narrative or philosophical content. The tone should be bhakti-oriented, glorifying Vishnu/Krishna or conveying Vedantic wisdom as appropriate to that Skandha.`;
+  } else if (scripture === "atharva-veda") {
+    const maxKanda = Math.max(...Object.keys(ATHARVA_KANDAS).map(Number));
+    const kandaNum = ((chapter - 1) % maxKanda) + 1;
+    const kandaDesc = ATHARVA_KANDAS[kandaNum] ?? ATHARVA_KANDAS[1];
+    contextClue = `This hymn comes from the ${kandaDesc}.
+Generate an Atharva Vedic hymn appropriate to this Kanda's theme. The Atharva Veda has a more magical/practical character than the Rigveda — include the specific purpose (healing, protection, prosperity, love, cosmic understanding) relevant to this Kanda.`;
   }
 
   const name = SCRIPTURE_NAMES[scripture] ?? scripture;
