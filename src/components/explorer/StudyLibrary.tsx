@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SCRIPTURES } from "@/lib/data/scriptures";
 import ScriptureCard from "./ScriptureCard";
 import Link from "next/link";
@@ -9,14 +10,15 @@ import { getProgress } from "@/lib/store/userProgress";
 import type { Scripture } from "@/lib/types";
 
 export default function StudyLibrary() {
+  const router = useRouter();
   const [scriptures, setScriptures] = useState<Scripture[]>(
-    SCRIPTURES.slice(0, 5).map((s) => ({ ...s, completionPercent: 0, lastReadLabel: "Not started" }))
+    SCRIPTURES.map((s) => ({ ...s, completionPercent: 0, lastReadLabel: "Not started" }))
   );
 
   useEffect(() => {
     const p = getProgress();
     setScriptures(
-      SCRIPTURES.slice(0, 5).map((s) => ({
+      SCRIPTURES.map((s) => ({
         ...s,
         completionPercent: p.scriptureProgress[s.id] ?? 0,
         lastReadLabel: p.scriptureProgress[s.id] ? s.lastReadLabel : "Not started",
@@ -41,14 +43,17 @@ export default function StudyLibrary() {
           <ScriptureCard key={s.id} scripture={s} index={i} />
         ))}
 
-        {/* Add Scripture card */}
-        <div className="bg-white rounded-2xl border-2 border-dashed border-[#E8D5B8] flex flex-col items-center justify-center min-h-[200px] gap-2.5 text-[#B8906A] hover:border-[#C17D3C] hover:text-[#C17D3C] hover:bg-[#FDF6EC] transition-all cursor-pointer group">
+        {/* Browse all collections card */}
+        <div
+          onClick={() => router.push("/reader")}
+          className="bg-white rounded-2xl border-2 border-dashed border-[#E8D5B8] flex flex-col items-center justify-center min-h-[200px] gap-2.5 text-[#B8906A] hover:border-[#C17D3C] hover:text-[#C17D3C] hover:bg-[#FDF6EC] transition-all cursor-pointer group"
+        >
           <div className="w-11 h-11 rounded-full border-2 border-current flex items-center justify-center group-hover:bg-[#F5E6D0] transition-colors">
             <Plus size={20} strokeWidth={2.5} />
           </div>
           <div className="text-center">
-            <p className="text-sm font-semibold">Add Scripture</p>
-            <p className="text-xs opacity-70 mt-0.5">Expand your library</p>
+            <p className="text-sm font-semibold">Browse All</p>
+            <p className="text-xs opacity-70 mt-0.5">View full collection</p>
           </div>
         </div>
       </div>
