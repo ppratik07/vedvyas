@@ -59,27 +59,26 @@ export async function POST(req: NextRequest) {
 
     if (openaiKey) {
       // Use OpenAI
-      const openai = new OpenAI({ apiKey: openaiKey });
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `Question: ${query}` },
-        ],
-        temperature: 0.7,
-        max_tokens: 1200,
-      });
-      raw = completion.choices[0]?.message?.content ?? "{}";
+      raw = await callOpenAI(openaiKey, query);
     } else {
-      // Fallback to Gemini
-      const ai = new GoogleGenAI({ apiKey: geminiKey! });
-      const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: `${SYSTEM_PROMPT}\n\nQuestion: ${query}`,
-      });
-      raw = response.text ?? "{}";
-      // Strip markdown fences if Gemini wraps the JSON
-      raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+      // Try Gemini first, fall back to OpenAI on quota error
+      try {
+        const ai = new GoogleGenAI({ apiKey: geminiKey! });
+        const response = await ai.models.generateContent({
+          model: "gemini-2.0-flash",
+          contents: `${SYSTEM_PROMPT}\n\nQuestion: ${query}`,
+        });
+        raw = response.text ?? "{}";
+        raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+      } catch (geminiErr: unknown) {
+        const status = (geminiErr as { status?: number })?.status;
+        if (status === 429 && openaiKey) {
+          console.warn("Gemini quota exceeded, falling back to OpenAI");
+          raw = await callOpenAI(openaiKey, query);
+        } else {
+          throw geminiErr;
+        }
+      }
     }
     let result: SearchResult;
     try {
@@ -104,6 +103,20 @@ export async function POST(req: NextRequest) {
     console.error("Search API error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+async function callOpenAI(apiKey: string, query: string): Promise<string> {
+  const openai = new OpenAI({ apiKey });
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: `Question: ${query}` },
+    ],
+    temperature: 0.7,
+    max_tokens: 1200,
+  });
+  return completion.choices[0]?.message?.content ?? "{}";
 }
 
 function citationToHref(id: string): string {
